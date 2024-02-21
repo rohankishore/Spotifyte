@@ -5,14 +5,16 @@ import sys
 from spotdl import __main__ as spotdl
 from PySide6.QtCore import Qt, Signal, QEasingCurve, QUrl, QThread
 from PySide6.QtGui import QIcon, QDesktopServices
-from PySide6.QtWidgets import QLabel, QHBoxLayout, QVBoxLayout, QApplication, QFrame, QWidget, QMessageBox
+from PySide6.QtWidgets import QLabel, QHBoxLayout, QVBoxLayout, QApplication, QFrame, QWidget, QMessageBox, \
+    QListWidgetItem, QListWidget
 
 from qfluentwidgets import (NavigationBar, NavigationItemPosition, MessageBox,
-                            isDarkTheme, setTheme, Theme, SearchLineEdit, PushButton,
+                            isDarkTheme, setTheme, Theme, SearchLineEdit, PushButton, ListWidget,
                             PopUpAniStackedWidget)
 from qfluentwidgets import FluentIcon as FIF
 from qframelesswindow import FramelessWindow, TitleBar
 
+from song import Song
 
 class Widget(QWidget):
 
@@ -29,14 +31,14 @@ class DownloaderThread(QThread):
     progress_update = Signal(int)
     finished = Signal(str)
 
-    def __init__(self, spotifylink):
+    def __init__(self, spotifylink, list_item):
         super().__init__()
         self.spotifylink = spotifylink
+        self.list_item = list_item
 
     def run(self):
         try:
-            process = subprocess.Popen([sys.executable, spotdl.__file__, self.spotifylink], stdout=subprocess.PIPE,
-                                       universal_newlines=True)
+            process = subprocess.Popen([sys.executable, spotdl.__file__, self.spotifylink], stdout=subprocess.PIPE, universal_newlines=True)
             while True:
                 output = process.stdout.readline().strip()
                 print(output)  # Add this line for debugging
@@ -50,41 +52,11 @@ class DownloaderThread(QThread):
                         print("Error:", e)  # Add this line for debugging
                         pass
             self.finished.emit("Download Completed!")
+            self.list_item.setText(f"{self.spotifylink} - Downloaded") # Update list item text
         except subprocess.CalledProcessError as e:
             print("Error:", e)  # Add this line for debugging
             self.finished.emit("Download Failed!")
 
-
-class Song(QWidget):
-
-    def __init__(self, parent=None):
-        super().__init__(parent=parent)
-        # self.label = QLabel("Song Download", self)
-        # self.label.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self._parent = parent
-        self.searchBox = SearchLineEdit(self)
-        self.searchBox.setPlaceholderText("Enter Spotify Track URL")
-        self.hBoxLayout = QHBoxLayout(self)
-        self.vBoxLayout = QVBoxLayout(self)
-        self.hBoxLayout.addWidget(self.searchBox, 8, Qt.AlignmentFlag.AlignTop)
-
-        self.download_button = PushButton(self)
-        self.download_button.setText("Download")
-        self.download_button.clicked.connect(self.start_download)
-        self.hBoxLayout.addWidget(self.download_button, 1, Qt.AlignmentFlag.AlignTop)
-        # self.setObjectName(text.replace(' ', '-'))
-
-    def start_download(self):
-        print("start")
-        spotifylink = self.searchBox.text()
-        print(spotifylink)
-        self.downloader_thread = DownloaderThread(spotifylink)
-        #self.downloader_thread.progress_update.connect(self.update_progress)
-        self.downloader_thread.finished.connect(self.finish_download)
-        self.downloader_thread.start()
-
-    def finish_download(self, message):
-        QMessageBox.information(self, "Download Status", message)
 
 
 class StackedWidget(QFrame):
