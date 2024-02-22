@@ -14,7 +14,7 @@ Spotify track and playlist downloader made with PySide6 and SpotDL
 </div>
 
 ## 🎵 What is Spotifyte?
-Spotifyte helps you to download songs directly from Spotify. With Spotifyte, you can download:
+Spotifyte helps you to download songs from Spotify with spotDL. With Spotifyte, you can download:
 - Single tracks
 - Playlists
 - Every song uploaded by an Artist
