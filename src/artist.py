@@ -1,7 +1,7 @@
 # coding:utf-8
+import random
 import subprocess
 import sys
-import random
 
 from PySide6.QtCore import Qt, Signal, QThread
 from PySide6.QtGui import QMovie
@@ -22,8 +22,7 @@ class DownloaderThread(QThread):
 
     def run(self):
         try:
-            process = subprocess.Popen([sys.executable, spotdl.__file__, self.spotifylink], stdout=subprocess.PIPE,
-                                       universal_newlines=True)
+            process = subprocess.Popen([sys.executable, spotdl.__file__, self.spotifylink], stdout=subprocess.PIPE, universal_newlines=True)
             while True:
                 output = process.stdout.readline().strip()
                 if output == '' and process.poll() is not None:
@@ -36,24 +35,20 @@ class DownloaderThread(QThread):
                         print("Error:", e)  # Add this line for debugging
                         pass
             self.finished.emit("Download Completed!")
-            self.list_item.setText(f"{self.spotifylink} - Downloaded")  # Update list item text
+            self.list_item.setText(f"{self.spotifylink} - Downloaded") # Update list item text
         except subprocess.CalledProcessError as e:
             print("Error:", e)  # Add this line for debugging
             self.finished.emit("Download Failed!")
 
 
-class Playlist(QWidget):
+class Artist(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.mainLayout = QVBoxLayout(self)
         self.hBoxLayout = QHBoxLayout()
         self.mainLayout.addLayout(self.hBoxLayout)
-        self.setObjectName("Playlist")
-
-        self.searchBox = SearchLineEdit(self)
-        self.searchBox.setPlaceholderText("Enter Spotify Playlist URL")
-        self.hBoxLayout.addWidget(self.searchBox, 8, Qt.AlignmentFlag.AlignTop)
+        self.setObjectName("Artist")
 
         # Add QLabel for GIF
         self.loading_label = QLabel(self)
@@ -61,8 +56,12 @@ class Playlist(QWidget):
         self.loading_label.setVisible(False)  # Initially hide the loading label
         self.mainLayout.addWidget(self.loading_label)
 
+        self.searchBox = SearchLineEdit(self)
+        self.searchBox.setPlaceholderText("Enter Spotify Artist URL")
+        self.hBoxLayout.addWidget(self.searchBox, 8, Qt.AlignmentFlag.AlignTop)
+
         self.download_button = PushButton(self)
-        self.download_button.setText("Download Playlist")
+        self.download_button.setText("Download All Songs from the Artist")
         self.download_button.clicked.connect(self.start_download)
         self.hBoxLayout.addWidget(self.download_button, 1, Qt.AlignmentFlag.AlignTop)
 
@@ -118,7 +117,7 @@ class Playlist(QWidget):
     def finish_download(self, message):
         w = MessageBox(
             'Yayyy🥰',
-            'Your Playlist has been successfully downloaded. Enjoy!',
+            'All songs from the given artist has been successfully downloaded. Enjoy!',
             self
         )
 

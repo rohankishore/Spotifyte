@@ -1,30 +1,62 @@
 # coding:utf-8
 import subprocess
 import sys
-
 from spotdl import __main__ as spotdl
 from PySide6.QtCore import Qt, Signal, QEasingCurve, QUrl, QThread
 from PySide6.QtGui import QIcon, QDesktopServices
-from PySide6.QtWidgets import QLabel, QHBoxLayout, QVBoxLayout, QApplication, QFrame, QWidget, QMessageBox, \
-    QListWidgetItem, QListWidget
-
+from PySide6.QtWidgets import QLabel, QHBoxLayout, QVBoxLayout, QApplication, QFrame, QWidget, QListWidgetItem
 from qfluentwidgets import (NavigationBar, NavigationItemPosition, MessageBox,
-                            isDarkTheme, setTheme, Theme, SearchLineEdit, PushButton, ListWidget,
-                            PopUpAniStackedWidget)
+                            isDarkTheme, setTheme, Theme,
+                            PopUpAniStackedWidget, ListWidget, PushButton, SearchLineEdit)
 from qfluentwidgets import FluentIcon as FIF
 from qframelesswindow import FramelessWindow, TitleBar
 
+import artist
+import playlist
 from song import Song
+
 
 class Widget(QWidget):
 
     def __init__(self, text: str, parent=None):
         super().__init__(parent=parent)
-        self.label = QLabel(text, self)
-        self.label.setAlignment(Qt.AlignCenter)
-        self.hBoxLayout = QHBoxLayout(self)
-        self.hBoxLayout.addWidget(self.label, 1, Qt.AlignCenter)
-        self.setObjectName(text.replace(' ', '-'))
+        self.mainLayout = QVBoxLayout(self)
+        self.hBoxLayout = QHBoxLayout()
+        self.mainLayout.addLayout(self.hBoxLayout)
+
+        self.searchBox = SearchLineEdit(self)
+        self.searchBox.setPlaceholderText("Enter Spotify Playlist URL")
+        self.hBoxLayout.addWidget(self.searchBox, 8, Qt.AlignmentFlag.AlignTop)
+
+        self.download_button = PushButton(self)
+        self.download_button.setText("Download Playlist")
+        self.download_button.clicked.connect(self.start_download)
+        self.hBoxLayout.addWidget(self.download_button, 1, Qt.AlignmentFlag.AlignTop)
+
+        self.music_list = ListWidget(self)
+
+        self.mainLayout.addWidget(self.music_list)
+
+    def start_download(self):
+        spotifylink = self.searchBox.text()
+        print(spotifylink)
+        list_item = QListWidgetItem(spotifylink)  # Create list item
+        self.music_list.addItem(list_item)  # Add list item to list
+        self.downloader_thread = DownloaderThread(spotifylink, list_item)
+        self.downloader_thread.finished.connect(self.finish_download)
+        self.downloader_thread.start()
+
+    def finish_download(self, message):
+        w = MessageBox(
+            'Yayyy🥰',
+            'Your Track has been successfully downloaded. Enjoy!',
+            self
+        )
+
+        w.cancelButton.setText("Let's goooo")
+
+        if w.exec():
+            pass
 
 
 class DownloaderThread(QThread):
@@ -38,7 +70,8 @@ class DownloaderThread(QThread):
 
     def run(self):
         try:
-            process = subprocess.Popen([sys.executable, spotdl.__file__, self.spotifylink], stdout=subprocess.PIPE, universal_newlines=True)
+            process = subprocess.Popen([sys.executable, spotdl.__file__, self.spotifylink], stdout=subprocess.PIPE,
+                                       universal_newlines=True)
             while True:
                 output = process.stdout.readline().strip()
                 print(output)  # Add this line for debugging
@@ -52,11 +85,10 @@ class DownloaderThread(QThread):
                         print("Error:", e)  # Add this line for debugging
                         pass
             self.finished.emit("Download Completed!")
-            self.list_item.setText(f"{self.spotifylink} - Downloaded") # Update list item text
+            self.list_item.setText(f"{self.spotifylink} - Downloaded")  # Update list item text
         except subprocess.CalledProcessError as e:
             print("Error:", e)  # Add this line for debugging
             self.finished.emit("Download Failed!")
-
 
 
 class StackedWidget(QFrame):
@@ -104,7 +136,7 @@ class CustomTitleBar(TitleBar):
 
         # add window icon
         self.iconLabel = QLabel(self)
-        self.iconLabel.setFixedSize(18, 18)
+        self.iconLabel.setFixedSize(20, 20)
         self.hBoxLayout.insertSpacing(0, 20)
         self.hBoxLayout.insertWidget(
             1, self.iconLabel, 0, Qt.AlignLeft | Qt.AlignVCenter)
@@ -117,20 +149,14 @@ class CustomTitleBar(TitleBar):
         self.titleLabel.setObjectName('titleLabel')
         self.window().windowTitleChanged.connect(self.setTitle)
 
-        # add search line edit
-        # self.searchLineEdit = SearchLineEdit(self)
-        # self.searchLineEdit.setPlaceholderText('搜索应用、游戏、电影、设备等')
-        # self.searchLineEdit.setFixedWidth(400)
-        # self.searchLineEdit.setClearButtonEnabled(True)
-
         self.vBoxLayout = QVBoxLayout()
         self.buttonLayout = QHBoxLayout()
         self.buttonLayout.setSpacing(0)
         self.buttonLayout.setContentsMargins(0, 0, 0, 0)
         self.buttonLayout.setAlignment(Qt.AlignTop)
-        self.buttonLayout.addWidget(self.minBtn)
-        self.buttonLayout.addWidget(self.maxBtn)
-        self.buttonLayout.addWidget(self.closeBtn)
+        self.buttonLayout.addWidget(self.minBtn)  # This line adds the minBtn
+        self.buttonLayout.addWidget(self.maxBtn)  # This line adds the maxBtn
+        self.buttonLayout.addWidget(self.closeBtn)  # This line adds the closeBtn
         self.vBoxLayout.addLayout(self.buttonLayout)
         self.vBoxLayout.addStretch(1)
         self.hBoxLayout.addLayout(self.vBoxLayout, 0)
@@ -140,11 +166,10 @@ class CustomTitleBar(TitleBar):
         self.titleLabel.adjustSize()
 
     def setIcon(self, icon):
-        self.iconLabel.setPixmap(QIcon(icon).pixmap(18, 18))
+        self.iconLabel.setPixmap(QIcon(icon).pixmap(20, 20))
 
     def resizeEvent(self, e):
         pass
-        # self.searchLineEdit.move((self.width() - self.searchLineEdit.width()) // 2, 8)
 
 
 class Window(FramelessWindow):
@@ -164,9 +189,9 @@ class Window(FramelessWindow):
         self.stackWidget = StackedWidget(self)
 
         # create sub interface
-        self.homeInterface = Song(self)
-        self.appInterface = Widget('Application Interface', self)
-        self.videoInterface = Widget('Video Interface', self)
+        self.songInterface = Song(self)
+        self.playlistInterface = playlist.Playlist(self)
+        self.artistInterface = artist.Artist(self)
         self.libraryInterface = Widget('library Interface', self)
 
         # initialize layout
@@ -185,29 +210,22 @@ class Window(FramelessWindow):
         self.hBoxLayout.setStretchFactor(self.stackWidget, 1)
 
     def initNavigation(self):
-        self.addSubInterface(self.homeInterface, FIF.MUSIC, 'Songs', selectedIcon=FIF.MUSIC)
-        self.addSubInterface(self.appInterface, FIF.MUSIC_FOLDER, 'Playlist')
-        self.addSubInterface(self.videoInterface, FIF.PHOTO, 'Album Art')
-
+        self.addSubInterface(self.songInterface, FIF.MUSIC, 'Songs', selectedIcon=FIF.MUSIC)
+        self.addSubInterface(self.playlistInterface, FIF.MUSIC_FOLDER, 'Playlists', selectedIcon=FIF.MUSIC_FOLDER)
+        self.addSubInterface(self.artistInterface, FIF.PEOPLE, 'Artists', selectedIcon=FIF.PEOPLE)
         self.addSubInterface(self.libraryInterface, FIF.SETTING, 'Settings', NavigationItemPosition.BOTTOM,
                              FIF.SETTING)
         self.navigationBar.addItem(
-            routeKey='Help',
+            routeKey='About',
             icon=FIF.HELP,
-            text='Help',
+            text='About',
             onClick=self.showMessageBox,
             selectable=False,
             position=NavigationItemPosition.BOTTOM,
         )
 
         self.stackWidget.currentChanged.connect(self.onCurrentInterfaceChanged)
-        self.navigationBar.setCurrentItem(self.homeInterface.objectName())
-
-        # hide the text of button when selected
-        # self.navigationBar.setSelectedTextVisible(False)
-
-        # adjust the font size of button
-        # self.navigationBar.setFont(getFont(12))
+        self.navigationBar.setCurrentItem(self.songInterface.objectName())
 
     def initWindow(self):
         self.resize(900, 700)
@@ -242,16 +260,20 @@ class Window(FramelessWindow):
         self.navigationBar.setCurrentItem(widget.objectName())
 
     def showMessageBox(self):
+        text_for_about = "Heya! it's Rohan, the creator of Spotifyte. I hope you've enjoyed using this app as much as I enjoyed making it." + "" + "\n" + "\n" \
+                                                                                                                                                          "I'm a school student and I can't earn my own money LEGALLY. So any donations will be largely appreciated. Also, if you find any bugs / have any feature requests, you can open a Issue/ Pull Request in the Repo." \
+                                                                                                                                                          "You can visit GitHub by pressing the button below. You can find Ko-Fi link there :) " + "\n" + "\n" + \
+                         "Once again, thank you for using Spotifyte. Please consider giving it a star ⭐ as it will largely motivate me to create more of such apps. Also do consider giving me a follow ;) "
         w = MessageBox(
-            '支持作者🥰',
-            '个人开发不易，如果这个项目帮助到了您，可以考虑请作者喝一瓶快乐水🥤。您的支持就是作者开发和维护项目的动力🚀',
+            'Spotifyte',
+            text_for_about,
             self
         )
-        w.yesButton.setText('来啦老弟')
-        w.cancelButton.setText('下次一定')
+        w.yesButton.setText('GitHub')
+        w.cancelButton.setText('Return')
 
         if w.exec():
-            QDesktopServices.openUrl(QUrl("https://afdian.net/a/zhiyiYo"))
+            QDesktopServices.openUrl(QUrl("https://github.com/rohankishore/Spotifyte"))
 
 
 if __name__ == '__main__':
