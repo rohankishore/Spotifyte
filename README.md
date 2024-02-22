@@ -2,7 +2,7 @@
 
 ![icon](https://github.com/rohankishore/Spotifyte/assets/109947257/210e9e94-a767-4d6f-9d6b-cdebd8b29416)   
 # Spotifyte
-Spotify track and playlist downloader made with PySide6 and SpotDL
+Spotify track and playlist downloader made with PySide6 and SpotDL. In simple terms, Spotifyte is like an GUI for SpotDL
 
 </div>
 
@@ -14,7 +14,7 @@ Spotify track and playlist downloader made with PySide6 and SpotDL
 </div>
 
 ## 🎵 What is Spotifyte?
-Spotifyte helps you to download songs from Spotify with spotDL. With Spotifyte, you can download:
+Spotifyte helps you to use SpotDL with GUI Interface. With Spotifyte, you can download:
 - Single tracks
 - Playlists
 - Every song uploaded by an Artist
