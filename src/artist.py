@@ -6,7 +6,7 @@ import sys
 from PySide6.QtCore import Qt, Signal, QThread
 from PySide6.QtGui import QMovie
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget, QMessageBox, \
-    QListWidgetItem, QLabel
+    QListWidgetItem, QLabel, QFileDialog
 from qfluentwidgets import (SearchLineEdit, PushButton, ListWidget, MessageBox)
 from spotdl import __main__ as spotdl
 
@@ -15,31 +15,39 @@ class DownloaderThread(QThread):
     progress_update = Signal(int)
     finished = Signal(str)
 
-    def __init__(self, spotifylink, list_item):
+    def __init__(self, spotifylink, list_item, custom_directory):
         super().__init__()
         self.spotifylink = spotifylink
         self.list_item = list_item
+        self.custom_directory = custom_directory
 
     def run(self):
         try:
-            process = subprocess.Popen([sys.executable, spotdl.__file__, self.spotifylink], stdout=subprocess.PIPE, universal_newlines=True)
-            while True:
-                output = process.stdout.readline().strip()
-                if output == '' and process.poll() is not None:
-                    break
-                if output.startswith('[download]'):
-                    try:
-                        percent = int(output.split()[1][:-1])
-                        self.progress_update.emit(percent)
-                    except (IndexError, ValueError) as e:
-                        print("Error:", e)  # Add this line for debugging
-                        pass
-            self.finished.emit("Download Completed!")
-            self.list_item.setText(f"{self.spotifylink} - Downloaded") # Update list item text
-        except subprocess.CalledProcessError as e:
-            print("Error:", e)  # Add this line for debugging
-            self.finished.emit("Download Failed!")
+            # Adjust the spotdl command to include the custom directory
+            process = subprocess.Popen([
+                sys.executable,
+                "-m", "spotdl",
+                self.spotifylink,
+                '--output', self.custom_directory
+            ], stdout=subprocess.PIPE, universal_newlines=True)
 
+            # Communicate progress or handle stdout as needed
+            for line in process.stdout:
+                # Process stdout, update progress, etc.
+                pass
+
+            # Wait for the process to finish and get the return code
+            return_code = process.wait()
+
+            # Emit appropriate signal based on the return code
+            if return_code == 0:
+                self.finished.emit("Download Completed!")
+            else:
+                self.finished.emit("Download Failed!")
+
+        except Exception as e:
+            print("Error:", e)  # Print the error for debugging
+            self.finished.emit("Download Failed!")
 
 class Artist(QWidget):
 
@@ -107,6 +115,7 @@ class Artist(QWidget):
             if w.exec():
                 pass
         else:
+            custom_directory = QFileDialog.getExistingDirectory(self, "Select Directory", "/")
             self.loading_label.setVisible(True)  # Show the loading label
             list_item = QListWidgetItem(spotifylink)  # Create list item
             self.music_list.addItem(list_item)  # Add list item to list
