@@ -95,10 +95,10 @@ class Artist(QWidget):
             if w.exec():
                 pass
 
-        elif "artist" in spotifylink:
+        elif "track" in spotifylink:
             w = MessageBox(
                 "You're in the wrong tab bud.",
-                "You're trying to download Artist in 'Songs' tab. Head over to the Artist tab and download all songs from an Artist at ease!",
+                "You're trying to download tracks in 'Artists' tab. Head over to the Songs tab and download all songs from an Artist at ease!",
                 self
             )
 

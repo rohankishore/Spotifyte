@@ -85,10 +85,10 @@ class Playlist(QWidget):
 
     def start_download(self):
         spotifylink = self.searchBox.text()
-        if "playlist" in spotifylink:
+        if "track" in spotifylink:
             w = MessageBox(
                 "You're in the wrong tab bud.",
-                "You're trying to download Playlist in 'Songs' tab. Head over to the Playlist tab and download Playlists at ease!",
+                "You're trying to download Tracks in 'Playlist' tab. Head over to the Songs tab and download Playlists at ease!",
                 self
             )
             w.cancelButton.setText("No worries bud!")
