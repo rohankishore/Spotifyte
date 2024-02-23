@@ -1,8 +1,8 @@
 # coding:utf-8
 import sys
-from PySide6.QtCore import Qt, Signal, QEasingCurve, QUrl
-from PySide6.QtGui import QIcon, QDesktopServices
-from PySide6.QtWidgets import QLabel, QHBoxLayout, QVBoxLayout, QApplication, QFrame
+from PyQt6.QtCore import Qt, pyqtSignal, QEasingCurve, QUrl
+from PyQt6.QtGui import QIcon, QDesktopServices
+from PyQt6.QtWidgets import QLabel, QHBoxLayout, QVBoxLayout, QApplication, QFrame
 from qfluentwidgets import (NavigationBar, NavigationItemPosition, MessageBox,
                             isDarkTheme, setTheme, Theme,
                             PopUpAniStackedWidget)
@@ -17,7 +17,7 @@ from song import Song
 class StackedWidget(QFrame):
     """ Stacked widget """
 
-    currentChanged = Signal(int)
+    currentChanged = pyqtSignal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
@@ -41,7 +41,7 @@ class StackedWidget(QFrame):
             self.view.setCurrentWidget(widget, duration=300)
         else:
             self.view.setCurrentWidget(
-                widget, True, False, 200, QEasingCurve.InQuad)
+                widget, True, False, 200, QEasingCurve.Type.InQuad)
 
     def setCurrentIndex(self, index, popOut=False):
         self.setCurrentWidget(self.view.widget(index), popOut)
@@ -62,13 +62,13 @@ class CustomTitleBar(TitleBar):
         self.iconLabel.setFixedSize(20, 20)
         self.hBoxLayout.insertSpacing(0, 20)
         self.hBoxLayout.insertWidget(
-            1, self.iconLabel, 0, Qt.AlignLeft | Qt.AlignVCenter)
+            1, self.iconLabel, 0, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         self.window().windowIconChanged.connect(self.setIcon)
 
         # add title label
         self.titleLabel = QLabel(self)
         self.hBoxLayout.insertWidget(
-            2, self.titleLabel, 0, Qt.AlignLeft | Qt.AlignVCenter)
+            2, self.titleLabel, 0, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         self.titleLabel.setObjectName('titleLabel')
         self.window().windowTitleChanged.connect(self.setTitle)
 
@@ -76,7 +76,7 @@ class CustomTitleBar(TitleBar):
         self.buttonLayout = QHBoxLayout()
         self.buttonLayout.setSpacing(0)
         self.buttonLayout.setContentsMargins(0, 0, 0, 0)
-        self.buttonLayout.setAlignment(Qt.AlignTop)
+        self.buttonLayout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.buttonLayout.addWidget(self.minBtn)  # This line adds the minBtn
         self.buttonLayout.addWidget(self.maxBtn)  # This line adds the maxBtn
         self.buttonLayout.addWidget(self.closeBtn)  # This line adds the closeBtn
@@ -154,7 +154,7 @@ class Window(FramelessWindow):
         self.resize(900, 700)
         self.setWindowIcon(QIcon('resource/icons/icon.png'))
         self.setWindowTitle('Spotifyte')
-        self.titleBar.setAttribute(Qt.WA_StyledBackground)
+        #self.titleBar.setAttribute(Qt.WA_StyledBackground)
 
         self.setQss()
 

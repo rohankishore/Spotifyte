@@ -1,19 +1,18 @@
 # coding:utf-8
-import random
 import subprocess
 import sys
+import random
 
-from PySide6.QtCore import Qt, Signal, QThread
-from PySide6.QtGui import QMovie
-from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget, QMessageBox, \
-    QListWidgetItem, QProgressBar, QLabel, QFileDialog
+from PyQt6.QtCore import Qt, pyqtSignal, QThread
+from PyQt6.QtGui import QMovie
+from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget, \
+    QListWidgetItem, QLabel, QFileDialog
 from qfluentwidgets import (SearchLineEdit, PushButton, ListWidget, MessageBox)
-from spotdl import __main__ as spotdl
 
 
 class DownloaderThread(QThread):
-    progress_update = Signal(int)
-    finished = Signal(str)
+    progress_update = pyqtSignal(int)
+    finished = pyqtSignal(str)
 
     def __init__(self, spotifylink, list_item, custom_directory):
         super().__init__()
@@ -81,7 +80,7 @@ class Song(QWidget):
         def get_gif():
             gifs = ["loading.gif", "loading_1.gif", "loading_2.gif"]
             gif = random.choice(gifs)
-            gif_path = "resource/misc/"+gif
+            gif_path = "resource/misc/" + gif
             return gif_path
 
         # Load the GIF
@@ -123,17 +122,6 @@ class Song(QWidget):
             self.downloader_thread = DownloaderThread(spotifylink, list_item, custom_directory)
             self.downloader_thread.finished.connect(self.finish_download)
             self.downloader_thread.start()
-
-        w = MessageBox(
-            'Uh Oh 😔',
-            'There is something wrong with your file path. Try again!',
-            self
-        )
-
-        w.cancelButton.setText("Alright genius 🤓")
-
-        if w.exec():
-            pass
 
     def finish_download(self, message):
         self.loading_label.setVisible(False)  # Hide the loading label after download completes
