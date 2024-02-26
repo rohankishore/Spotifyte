@@ -63,7 +63,7 @@ This project was made possible just because of [SpotDL](https://github.com/spotD
 <br>
 
 
-### I hope you'll enjoy using AnimeSnap as much as I enjoyed while making it. Thanks a lot!
+### I hope you'll enjoy using Spotifyte as much as I enjoyed while making it. Thanks a lot!
 
 
 ```
